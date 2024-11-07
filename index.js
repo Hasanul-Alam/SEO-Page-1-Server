@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.static("public"));
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.uvq0yvv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -32,9 +32,32 @@ async function run() {
 
     // Databases
     const database = client.db("SEO-Page-1");
+    const allDataCollection = database.collection("card-data");
+
+    // All Operations
+
+    // Get all data
+    app.get('/all-data', async(req, res) => {
+      const cursor = await allDataCollection.find({}).toArray();
+      res.send(cursor);
+    })
+
+    // Post data
+    app.patch('/all-data/:id', async (req, res) => {
+      const id = req.params.id
+      const data = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: data
+      };
+      const result = await allDataCollection.updateOne(filter, updateDoc, options);
+      res.send(result)
+      console.log(data)
+      console.log(id)
+    })
 
 
-    // All CRUD operations
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
